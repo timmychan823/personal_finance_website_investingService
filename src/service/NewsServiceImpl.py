@@ -37,15 +37,31 @@ class NewServiceImpl(NewService):
         return list_of_news_processed
     
     @override
-    def getListOfUniqueCompanies(self)->list[str]:      
+    def getListOfUniqueTickers(self)->list[str]:      
         '''
-        This function is used to get list of unique companies and reformat data retrieved from database
+        This function is used to get list of unique tickers and reformat data retrieved from database
 
         Returns
         -------
         list[str]
             a list of tickers eg. ['TSLA', 'NVDA'] will be returned, which is a list of strings
         '''    
-        list_of_news_retrieved = np.array(self.newsDAO.getListOfUniqueCompanies()).flatten().tolist()
+        list_of_news_retrieved = np.array(self.newsDAO.getListOfUniqueTickers()).flatten().tolist()
         return list_of_news_retrieved
 
+    @override
+    def getListOfCompanies(self, list_of_sectors :list[str], list_of_sub_industries: list[str], limit:int|None=10)->list[dict[str, str]]:
+        '''
+        This function is used to get list of companies and reformat data retrieved from database
+
+        Returns
+        -------
+        list[str]
+            a list of companies eg. [{'ticker': 'TSLA', 'companyName': 'Tesla, Inc.', 'sector': 'Consumer Discretionary', 'subIndustry': 'Automobile Manufacturers'}, {'ticker': "NVDA", 'companyName': "Nvidia", 'sector': "Information Technology", 'subIndustry': "Semiconductors"}] will be returned, which is a list of dict[str, str]
+        '''    
+        list_of_companies_retrieved = self.newsDAO.getListOfCompanies(list_of_sectors=list_of_sectors, list_of_sub_industries=list_of_sub_industries, limit=limit)
+        list_of_companies_processed = []
+        for company in list_of_companies_retrieved:
+            company_object = {"ticker": company[0], "companyName": company[1], "sector": company[2], "subIndustry": company[3]}
+            list_of_companies_processed.append(company_object)
+        return list_of_companies_processed

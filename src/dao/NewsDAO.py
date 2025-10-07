@@ -17,7 +17,14 @@ class NewsDAO(ABC):
         pass
 
     @abstractmethod
-    def getListOfUniqueCompanies(self)->list[tuple[str]]:
+    def getListOfUniqueTickers(self)->list[tuple[str]]:
+        '''
+        Returns a list of unique tickers from database
+        '''
+        pass
+
+    @abstractmethod
+    def getListOfCompanies(self, list_of_sectors:list[str]|Literal['all']|None=None, list_of_sub_industries: list[str]|Literal['all']|None=None, limit:int|None=10)->list[tuple[str]]:
         '''
         Returns a list of unique companies from database
         '''

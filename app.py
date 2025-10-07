@@ -33,7 +33,10 @@ def list_of_news():
             tickers='all'
         else:
             tickers = request.args.getlist('tickers')
-        limit = int(request.args.get('limit')) #TODO: should also get page number of desired page, startTime, endTime
+        try:
+            limit = min(int(request.args.get('limit')), 50) #TODO: should also get page number of desired page
+        except Exception as e:
+            limit = 10        
         logger.info(f"tickers: {tickers}, limit: {limit}")
         list_of_news = (newServiceImpl.getListOfNews(tickers, limit))
         return list_of_news #TODO: should also count the total number of news and return page number of desired page 
@@ -41,9 +44,28 @@ def list_of_news():
 @app.route('/listOfUniqueCompanies', methods = ['GET'])
 def list_of_unique_companies():
     if request.method == "GET":
-        list_of_unique_companies = (newServiceImpl.getListOfUniqueCompanies())
+        list_of_unique_companies = (newServiceImpl.getListOfUniqueTickers())
         return list_of_unique_companies
-
+    
+@app.route('/listOfCompanies', methods = ['GET'])
+def list_of_companies():
+    if request.method == "GET":
+        if request.args.get('sectors')=='all':
+            list_of_sectors='all'
+        else:
+            list_of_sectors = request.args.getlist('sectors')
+        if request.args.get('subIndustries')=='all':
+            list_of_sub_industries='all'
+        else:
+            list_of_sub_industries = request.args.getlist('subIndustries')
+        try:
+            limit = min(int(request.args.get('limit')), 50) #TODO: should also get page number of desired page
+        except Exception as e:
+            limit = 10
+        logger.info(f"list_of_sectors: {list_of_sectors}, list_of_sub_industries: {list_of_sub_industries}, limit: {limit}")
+        list_of_companies = (newServiceImpl.getListOfCompanies(list_of_sectors=list_of_sectors, list_of_sub_industries=list_of_sub_industries, limit=limit))
+        return list_of_companies #TODO: should also count the total number of news and return page number of desired page 
+    
 @app.route('/dataReleases', methods = ['GET'])
 async def list_of_releases():
     if request.method == 'GET':
@@ -51,7 +73,7 @@ async def list_of_releases():
         return out
 
 if __name__ == '__main__':
-    app.run(debug = True, host = '0.0.0.0', port=15000)
+    app.run(debug = True, host = '0.0.0.0', port=5000)
 
 
 

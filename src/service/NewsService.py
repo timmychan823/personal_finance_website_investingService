@@ -18,8 +18,15 @@ class NewService(ABC):
         pass 
 
     @abstractmethod
-    def getListOfUniqueCompanies(self)->list[str]:      
+    def getListOfUniqueTickers(self)->list[str]:      
         '''
-        Returns a list of unique companies
+        Returns a list of unique tickers
         '''    
         pass 
+
+    @abstractmethod
+    def getListOfCompanies(self, list_of_sectors :list[str], list_of_sub_industries: list[str], limit:int|None=10)->list[dict[str, str]]:
+        '''
+        Returns a list of companies according to filter provided
+        '''
+        pass

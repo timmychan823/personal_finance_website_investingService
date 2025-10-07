@@ -38,13 +38,13 @@ def main():
         driver.get("https://en.wikipedia.org/wiki/List_of_S%26P_500_companies")
         tableOfSandP500ConstituentsElement = driver.find_element(By.ID, "constituents")
         listOfSandP500ConstituentsTickersElement = tableOfSandP500ConstituentsElement.find_elements(By.CSS_SELECTOR, "tbody > tr > td:first-child")
+        listOfSandP500ConstituentsCompanyNameElement = tableOfSandP500ConstituentsElement.find_elements(By.CSS_SELECTOR, "tbody > tr > td:nth-child(2)")
+        listOfSandP500ConstituentsSectorElement = tableOfSandP500ConstituentsElement.find_elements(By.CSS_SELECTOR, "tbody > tr > td:nth-child(3)")
+        listOfSandP500ConstituentsSubIndustryElement = tableOfSandP500ConstituentsElement.find_elements(By.CSS_SELECTOR, "tbody > tr > td:nth-child(4)")
+
     except Exception as e:
         logger.error("Errors occured while fetching for tableOfSandP500ConstituentsElement, skipping all remaining steps...")
         raise e
-
-    listOfSandP500ConstituentsTickers = []
-    for tickerElement in listOfSandP500ConstituentsTickersElement:
-        listOfSandP500ConstituentsTickers.append(tickerElement.text)
 
     engine=None
     try:
@@ -54,6 +54,22 @@ def main():
         logger.error(f"Error: {e}")
         logger.error("Failed to connect to Database")
         raise e
+    
+    listOfSandP500ConstituentsTickers = []
+    listOfSandP500Companies = []
+
+    for i in range(len(listOfSandP500ConstituentsTickersElement)):
+        ticker = listOfSandP500ConstituentsTickersElement[i].text
+        companyName = listOfSandP500ConstituentsCompanyNameElement[i].text
+        sector = listOfSandP500ConstituentsSectorElement[i].text
+        subIndustry = listOfSandP500ConstituentsSubIndustryElement[i].text
+        listOfSandP500Companies.append({"ticker": ticker, "companyName": companyName, "sector": sector, "subIndustry": subIndustry})
+        listOfSandP500ConstituentsTickers.append(ticker)
+    logger.info(f"Number of companies: {len(listOfSandP500Companies)}. Writting to Database...")
+    logger.info("Writting to Database...")
+    sandP500Companies_df = pd.DataFrame(listOfSandP500Companies)
+    sandP500Companies_df.to_sql(name=COMPANY_TABLE_NAME, con=engine, if_exists="replace", index=False)
+    logger.info("Task company list update completed")
 
     listOfNewsJsonObjects = []
 
@@ -61,7 +77,7 @@ def main():
         if len(listOfNewsJsonObjects)>=1000:
             logger.info(f"Number of records: {len(listOfNewsJsonObjects)}. Writting to Database...")
             df = pd.DataFrame(listOfNewsJsonObjects)
-            df.to_sql(name=TABLE_NAME, con=engine, if_exists="append", index=False)
+            df.to_sql(name=RAW_NEWS_TABLE_NAME, con=engine, if_exists="append", index=False)
             listOfNewsJsonObjects.clear()
         try:
             driver.get(f"https://finance.yahoo.com/quote/{ticker}/latest-news")
@@ -99,7 +115,7 @@ def main():
     logger.info(f"Number of records: {len(listOfNewsJsonObjects)}. Writting to Database...")
     logger.info("Writting to Database...")
     df = pd.DataFrame(listOfNewsJsonObjects)
-    df.to_sql(name=TABLE_NAME, con=engine, if_exists="append", index=False)
+    df.to_sql(name=RAW_NEWS_TABLE_NAME, con=engine, if_exists="append", index=False)
     listOfNewsJsonObjects.clear()
     logger.info("Task scrapeNews completed")
 

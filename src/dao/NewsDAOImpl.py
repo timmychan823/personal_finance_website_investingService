@@ -51,9 +51,9 @@ class NewsDAOImpl(NewsDAO):
             return records
     
     @override
-    def getListOfUniqueCompanies(self)->list[tuple[str]]:
+    def getListOfUniqueTickers(self)->list[tuple[str]]:
         '''
-        This function is used to get list of unique companies from database
+        This function is used to get list of unique tickers from database
 
         Returns
         -------
@@ -66,6 +66,47 @@ class NewsDAOImpl(NewsDAO):
                         FROM public."NewsSummary"
                         ORDER BY x
                     """
+            query+=";"
+            curs.execute(query)
+            records = curs.fetchall()
+            return records
+        
+            
+    @override
+    def getListOfCompanies(self, list_of_sectors:list[str]|Literal['all']|None=None, list_of_sub_industries: list[str]|Literal['all']|None=None, limit:int|None=10)->list[tuple[str]]:
+        '''
+        This function is used to get list of companies from database
+
+        Returns
+        -------
+        list[tuple[str]]
+            a list of companies eg. [('TSLA','Tesla, Inc.', 'Consumer Discretionary', 'Automobile Manufacturers',), ("NVDA", "Nvidia", "Information Technology", "Semiconductors",)] will be returned from the database
+        '''
+        with self.conn.cursor() as curs: 
+            query = """
+                        SELECT *
+                        FROM public."Companies"
+                        WHERE 1=1
+                    """
+            if list_of_sectors != "all":
+                query+=""" AND "sector" = ANY(ARRAY"""
+                if list_of_sectors != None:
+                    query+=str(list_of_sectors)
+                else:
+                    query+=str([])
+                query+="::text[])"
+            if list_of_sub_industries != "all":
+                query+=""" AND "subIndustry" = ANY(ARRAY"""
+                if list_of_sub_industries != None:
+                    query+=str(list_of_sub_industries)
+                else:
+                    query+=str([])
+                query+="::text[])"
+            if limit==None:
+                limit=10 
+                query+=f"LIMIT {limit}"
+            else:
+                query+=f"LIMIT {limit}"
             query+=";"
             curs.execute(query)
             records = curs.fetchall()
