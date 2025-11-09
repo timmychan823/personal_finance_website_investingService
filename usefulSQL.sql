@@ -13,12 +13,12 @@ CREATE DATABASE "NewsSummaryDB"
 ---Create public."News" to store raw news scraped using Selenium
 CREATE TABLE IF NOT EXISTS public."News"
 (
-    link text COLLATE pg_catalog."default",
+    link text COLLATE pg_catalog."default" NOT NULL,
     "newsTitle" text COLLATE pg_catalog."default",
-    "newsDescription" text COLLATE pg_catalog."default",
     "newsSource" text COLLATE pg_catalog."default",
-    "newsPublishTime" timestamp without time zone,
-    ticker text COLLATE pg_catalog."default"
+    "newsPublishTime" timestamp without time zone NOT NULL,
+    ticker text COLLATE pg_catalog."default",
+    CONSTRAINT "News_pkey" PRIMARY KEY (link, "newsPublishTime")
 )
 
 TABLESPACE pg_default;
@@ -30,14 +30,13 @@ ALTER TABLE IF EXISTS public."News"
 ---Create public."NewsSummary"---
 CREATE TABLE IF NOT EXISTS public."NewsSummary"
 (
-    link text COLLATE pg_catalog."default",
+    link text COLLATE pg_catalog."default" NOT NULL,
     "newsTitle" text COLLATE pg_catalog."default",
-    "newsDescription" text COLLATE pg_catalog."default",
     "newsSource" text COLLATE pg_catalog."default",
-    "newsPublishTime" timestamp without time zone,
+    "newsPublishTime" timestamp without time zone NOT NULL,
     tickers text[] COLLATE pg_catalog."default",
     "newsSentiment" double precision,
-    CONSTRAINT "UNIQUE_LINK_CONSTRAINT" UNIQUE (link)
+    CONSTRAINT "NewsSummary_pkey" PRIMARY KEY (link, "newsPublishTime")
 )
 
 TABLESPACE pg_default;
@@ -48,20 +47,21 @@ ALTER TABLE IF EXISTS public."NewsSummary"
 
 ---New Processing if table public."NewsSummary" exists---
 INSERT into public."NewsSummary"
-SELECT link, "newsTitle", "newsDescription", "newsSource", MIN("newsPublishTime") as "newsPublishTime", array_agg(array[ticker]) as "tickers", CAST(NULL AS double precision) as "newsSentiment"
+SELECT link, "newsTitle", "newsSource", MIN("newsPublishTime") as "newsPublishTime", array_agg(array[ticker]) as "tickers", CAST(NULL AS double precision) as "newsSentiment"
 from public."News"
 where "newsPublishTime" >= '2025-07-15 00:00:00' and "newsPublishTime" < '2025-07-16 00:00:00'
-group by link, "newsTitle", "newsDescription", "newsSource";
+and link NOT IN (SELECT link FROM public."NewsSummary")
+group by link, "newsTitle", "newsSource";
 ---New Processing if table public."NewsSummary" exists---
 
 ---Get back records with a particular ticker in tickers array---
-SELECT link, "newsTitle", "newsDescription", "newsSource", "newsPublishTime", "tickers", "newsSentiment"
+SELECT link, "newsTitle", "newsSource", "newsPublishTime", "tickers", "newsSentiment"
 FROM public."NewsSummary"
 WHERE 'TSLA'=ANY ("tickers");
 ---Get back records with ticket in tickers array---
 
 ---Get back News that are published from the beginning of today---
-SELECT DISTINCT(link, "newsTitle", "newsDescription", "newsSource", "newsPublishTime", "tickers", "newsSentiment")
+SELECT DISTINCT(link, "newsTitle", "newsSource", "newsPublishTime", "tickers", "newsSentiment")
 FROM public."NewsSummary"
 WHERE "newsPublishTime" >= '2025-07-15 00:00:00' and "newsPublishTime" < '2025-07-16 00:00:00';
 ---Get back News  with ticket in tickers array that is published at the end of the day---
@@ -72,3 +72,9 @@ USING public."NewsSummary" b
 WHERE a."newsPublishTime" < b."newsPublishTime"
 AND a.link = b.link;
 ---Remove Duplicate---
+
+---Get back records with only one ticker in tickers array---
+SELECT *
+FROM public."NewsSummary"
+WHERE CARDINALITY(tickers) = 1;
+---Get back records with only one ticker in tickers array---

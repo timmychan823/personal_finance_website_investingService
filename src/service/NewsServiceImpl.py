@@ -1,7 +1,8 @@
 from src.dao.NewsDAO import NewsDAO
 from .NewsService import NewService
 import numpy as np
-from typing import Literal, Any, override
+from typing import Literal, Any
+# , override
 
 class NewServiceImpl(NewService):
     '''
@@ -10,7 +11,7 @@ class NewServiceImpl(NewService):
     def __init__(self, news_dao: NewsDAO)->None:
         self.newsDAO = news_dao
     
-    @override
+    # @override
     def getListOfNews(self, list_of_tickers: list[str]|Literal['all']|None=None, limit:int|None=10)->list[dict[str, Any]]:   
         '''
         This function is used to get list of news based on filter and reformat data retrieved from database
@@ -30,13 +31,13 @@ class NewServiceImpl(NewService):
         list_of_news_retrieved = self.newsDAO.getListOfNews(list_of_tickers=list_of_tickers, limit=limit)
         list_of_news_processed = []
         for news in list_of_news_retrieved:
-            news_object = {"newsLink": news[0], "newsTitle": news[1], "newsDescription": news[2], "newsSource": news[3], "newsPublishTime": news[4], "tickers": np.array(news[5]).flatten().tolist()}
-            if news[6]:
-                news_object["newsSentiment"] = news[6]
+            news_object = {"newsLink": news[0], "newsTitle": news[1], "newsSource": news[2], "newsPublishTime": news[3], "tickers": np.array(news[4]).flatten().tolist()}
+            if news[5]:
+                news_object["newsSentiment"] = news[5]
             list_of_news_processed.append(news_object)
         return list_of_news_processed
     
-    @override
+    # @override
     def getListOfUniqueTickers(self)->list[str]:      
         '''
         This function is used to get list of unique tickers and reformat data retrieved from database
@@ -49,7 +50,7 @@ class NewServiceImpl(NewService):
         list_of_news_retrieved = np.array(self.newsDAO.getListOfUniqueTickers()).flatten().tolist()
         return list_of_news_retrieved
 
-    @override
+    # @override
     def getListOfCompanies(self, list_of_sectors :list[str], list_of_sub_industries: list[str], limit:int|None=10)->list[dict[str, str]]:
         '''
         This function is used to get list of companies and reformat data retrieved from database

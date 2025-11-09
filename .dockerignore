@@ -1,0 +1,6 @@
+notebooks/
+output/
+.git
+model/
+venv/
+log/

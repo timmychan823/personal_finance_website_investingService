@@ -1,8 +1,7 @@
 class News:
-    def __init__(self, news_link: str, news_title: str, news_description: str, news_source: str, news_publish_time: str, tickers: list[str], news_sentiment: float)->None:        
+    def __init__(self, news_link: str, news_title: str, news_source: str, news_publish_time: str, tickers: list[str], news_sentiment: float)->None:        
         self.__news_link: str = news_link
         self.__news_title: str = news_title
-        self.__news_description: str = news_description
         self.__news_source: str = news_source
         self.__news_publish_time: str = news_publish_time
         self.__tickers: list[str] = tickers
@@ -23,14 +22,6 @@ class News:
     @news_title.setter
     def news_title(self, news_title):
         self.__news_title = news_title
-
-    @property
-    def news_description(self):
-        return self.__news_description
-
-    @news_description.setter
-    def news_description(self, news_description):
-        self.__news_description = news_description
 
     @property
     def news_source(self):

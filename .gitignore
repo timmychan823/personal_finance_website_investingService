@@ -1,7 +1,40 @@
-*.pyc
-*.exe
-*.log
 
-bin/
+data/
+
+# Distribution / packaging
+~*.*
+screenlog*.*
+workspace.xml
+__pycache__/
+*.egg-info/
+*.py[cod]
+*$py.class
+*.DS_Store
+.idea/
+*.pyc
+chromedriver.exe
+
+# PyBuilder
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# Environments
+.env
+.venv
+env/
 venv/
+ENV/
+env.bak/
+venv.bak/
+# mypy
+.mypy_cache/
+#pycharm
+workspace.xml
+model/
+bin/
 log/

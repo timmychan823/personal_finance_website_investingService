@@ -1,5 +1,7 @@
+import psycopg2
 from .NewsDAO import NewsDAO
-from typing import Literal, Any, override
+from typing import Literal, Any
+# , override
 
 class NewsDAOImpl(NewsDAO):
     '''
@@ -8,7 +10,7 @@ class NewsDAOImpl(NewsDAO):
     def __init__(self, conn)->None:
         self.conn = conn #TODO: how to check the if conn is an instance of connection?
 
-    @override
+    # @override
     def getListOfNews(self, list_of_tickers:list[str]|Literal['all']|None=None, limit:int|None=10)->list[tuple[Any]]:
         '''
         This function is used to get list of news based on filter from the database
@@ -25,32 +27,37 @@ class NewsDAOImpl(NewsDAO):
         list[tuple[Any]]
             a list of tuple will be returned, which is a list of news objects from the database
         '''
-        with self.conn.cursor() as curs: 
-            query = """
-                        SELECT link, "newsTitle", "newsDescription", "newsSource", "newsPublishTime", "tickers", "newsSentiment"
-                        FROM public."NewsSummary"
-                        WHERE
-                    """
-            if list_of_tickers=="all":
-                query+=" 1=1"
-            else:
-                query+=""" "tickers" && ARRAY"""
-                if list_of_tickers != None:
-                    query+=str(list_of_tickers)
+        try:
+            with self.conn.cursor() as curs: 
+                query = """
+                            SELECT link, "newsTitle", "newsSource", "newsPublishTime", "tickers", "newsSentiment"
+                            FROM public."NewsSummary"
+                            WHERE
+                        """
+                if list_of_tickers=="all":
+                    query+=" 1=1"
                 else:
-                    query+=str([])
-                query+="::text[]"
-            if limit==None:
-                limit=10 
-                query+=f"LIMIT {limit}"
-            else:
-                query+=f"LIMIT {limit}"
-            query+=";"
-            curs.execute(query)
-            records = curs.fetchall()
-            return records
+                    query+=""" "tickers" && ARRAY"""
+                    if list_of_tickers != None:
+                        query+=str(list_of_tickers)
+                    else:
+                        query+=str([])
+                    query+="::text[]"
+                if limit==None:
+                    limit=10 
+                    query+=f"LIMIT {limit}"
+                else:
+                    query+=f"LIMIT {limit}"
+                query+=";"
+                curs.execute(query)
+                records = curs.fetchall()
+                return records
+        except psycopg2.errors.InFailedSqlTransaction:
+            self.conn.rollback()  # Rollback the aborted transaction
+        except Exception as e:
+            self.conn.rollback() # Rollback for other errors as well
     
-    @override
+    # @override
     def getListOfUniqueTickers(self)->list[tuple[str]]:
         '''
         This function is used to get list of unique tickers from database
@@ -72,7 +79,7 @@ class NewsDAOImpl(NewsDAO):
             return records
         
             
-    @override
+    # @override
     def getListOfCompanies(self, list_of_sectors:list[str]|Literal['all']|None=None, list_of_sub_industries: list[str]|Literal['all']|None=None, limit:int|None=10)->list[tuple[str]]:
         '''
         This function is used to get list of companies from database

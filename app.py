@@ -8,11 +8,22 @@ from flask_cors import CORS
 import requests
 import logging
 import json
+import sys
+import optparse
+import time
+from finbert.finbert import predict
+from pytorch_pretrained_bert.modeling import BertForSequenceClassification
+import nltk
+import os
 
 logger = logging.getLogger()
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s') #change this to DEBUG mode for debugging
+nltk.download('punkt')
+nltk.download('punkt_tab')
 app = Flask(__name__)
 cors = CORS(app)
+start = int(round(time.time()))
+model = BertForSequenceClassification.from_pretrained('./model/', num_labels=3, cache_dir=None)
 
 pg_connection_dict = {
     'dbname': DB_NAME,
@@ -71,6 +82,11 @@ async def list_of_releases():
     if request.method == 'GET':
         out = await dataReleaseServiceImpl.getDataRelease()
         return out
+
+@app.route("/sentimentAnalysis",methods=['POST'])
+def score():
+    text=request.get_json()['text']
+    return(predict(text, model).to_json(orient='records'))
 
 if __name__ == '__main__':
     app.run(debug = True, host = '0.0.0.0', port=5000)
