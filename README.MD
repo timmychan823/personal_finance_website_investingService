@@ -1,1 +1,2 @@
 Please add a chrome driver to the project root directory for selenium to use it.
+Please create a model folder under the project root directory and run git clone https://huggingface.co/ProsusAI/finbert in the model folder created.

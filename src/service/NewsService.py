@@ -11,9 +11,9 @@ class NewService(ABC):
         pass
     
     @abstractmethod
-    def getListOfNews(self, list_of_tickers: list[str]|Literal['all']|None=None, limit:int|None=10)->list[dict[str, Any]]:  
+    def getListOfNews(self, list_of_tickers: list[str]|Literal['all']|None=None, limit:int=10, offset:int=0)->dict[str, list[dict[str, Any]]|int]:  
         '''
-        Returns a list of news in json object format
+        Returns a dictionary containing number of news and list of news in json object format
         '''    
         pass 
 

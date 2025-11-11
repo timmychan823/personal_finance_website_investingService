@@ -47,9 +47,15 @@ def list_of_news():
         try:
             limit = min(int(request.args.get('limit')), 50) #TODO: should also get page number of desired page
         except Exception as e:
-            limit = 10        
-        logger.info(f"tickers: {tickers}, limit: {limit}")
-        list_of_news = (newServiceImpl.getListOfNews(tickers, limit))
+            limit = 10
+        try:
+            pageNumber = max(int(request.args.get('pageNumber'))-1, 0)
+        except Exception as e:
+            pageNumber = 0
+        offset = pageNumber*limit
+        
+        logger.info(f"tickers: {tickers}, limit: {limit}, offset: {offset}")
+        list_of_news = (newServiceImpl.getListOfNews(tickers, limit, offset))
         return list_of_news #TODO: should also count the total number of news and return page number of desired page 
 
 @app.route('/listOfUniqueCompanies', methods = ['GET'])

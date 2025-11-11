@@ -1,6 +1,7 @@
 import psycopg2
 from .NewsDAO import NewsDAO
 from typing import Literal, Any
+from logging import getLogger
 # , override
 
 class NewsDAOImpl(NewsDAO):
@@ -11,7 +12,7 @@ class NewsDAOImpl(NewsDAO):
         self.conn = conn #TODO: how to check the if conn is an instance of connection?
 
     # @override
-    def getListOfNews(self, list_of_tickers:list[str]|Literal['all']|None=None, limit:int|None=10)->list[tuple[Any]]:
+    def getListOfNews(self, list_of_tickers:list[str]|Literal['all']|None=None, limit:int=10, offset: int = 0)->dict[str, list[tuple[Any]]|int]:
         '''
         This function is used to get list of news based on filter from the database
 
@@ -24,34 +25,54 @@ class NewsDAOImpl(NewsDAO):
 
         Returns
         -------
-        list[tuple[Any]]
-            a list of tuple will be returned, which is a list of news objects from the database
+        dict[str, list[tuple[Any]]|int]
+            dictionary containing number of news and a list of tuple will be returned, which is a list of news objects from the database
         '''
         try:
+            logger = getLogger()
             with self.conn.cursor() as curs: 
-                query = """
-                            SELECT link, "newsTitle", "newsSource", "newsPublishTime", "tickers", "newsSentiment"
-                            FROM public."NewsSummary"
-                            WHERE
-                        """
+                query_filtering_part = """FROM public."NewsSummary"
+                WHERE
+                """
                 if list_of_tickers=="all":
-                    query+=" 1=1"
+                    query_filtering_part+=" 1=1"
                 else:
-                    query+=""" "tickers" && ARRAY"""
+                    query_filtering_part+=""" "tickers" && ARRAY"""
                     if list_of_tickers != None:
-                        query+=str(list_of_tickers)
+                        query_filtering_part+=str(list_of_tickers)
                     else:
-                        query+=str([])
-                    query+="::text[]"
-                if limit==None:
-                    limit=10 
-                    query+=f"LIMIT {limit}"
-                else:
-                    query+=f"LIMIT {limit}"
-                query+=";"
+                        query_filtering_part+=str([])
+                    query_filtering_part+="::text[]"
+
+                query_sorting_limit_offset_part =f"""ORDER BY "newsPublishTime" DESC
+                LIMIT {limit}
+                OFFSET {offset}""" #TODO: add offset later
+                
+                query = f"""SELECT link, "newsTitle", "newsSource", "newsPublishTime", "tickers", "newsSentiment"
+                {query_filtering_part}
+                {query_sorting_limit_offset_part};"""
+
+                logger.info("Executing query:", query)  # //TODO: some problem here, 0 record fetched, Debugging line to print the query being executed
+
                 curs.execute(query)
                 records = curs.fetchall()
-                return records
+                
+                logger.info(f"Records fetched: {records}")  # Debugging line to print fetched records
+                
+                query = f"""SELECT COUNT(*)
+                {query_filtering_part};
+                """
+
+                logger.info("Executing query:", query)  # Debugging line to print the query being executed
+
+                curs.execute(query)
+                number_of_news_from_db = curs.fetchone()
+                number_of_news = int(number_of_news_from_db[0])
+
+                result = dict()
+                result['listOfNews'] = records
+                result['numberOfNews'] = number_of_news
+                return result
         except psycopg2.errors.InFailedSqlTransaction:
             self.conn.rollback()  # Rollback the aborted transaction
         except Exception as e:

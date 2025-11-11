@@ -12,7 +12,7 @@ class NewServiceImpl(NewService):
         self.newsDAO = news_dao
     
     # @override
-    def getListOfNews(self, list_of_tickers: list[str]|Literal['all']|None=None, limit:int|None=10)->list[dict[str, Any]]:   
+    def getListOfNews(self, list_of_tickers: list[str]|Literal['all']|None=None, limit:int=10, offset:int=0)->dict[str, list[dict[str, Any]]|int]:   
         '''
         This function is used to get list of news based on filter and reformat data retrieved from database
 
@@ -25,17 +25,18 @@ class NewServiceImpl(NewService):
 
         Returns
         -------
-        list[dict[str, Any]]
-            a list of json object will be returned, which is a list of news objects
+        dict[str, list[dict[str, Any]]|int]
+            a dictionary containing number of news and list of news in json object format will be returned
         '''    
-        list_of_news_retrieved = self.newsDAO.getListOfNews(list_of_tickers=list_of_tickers, limit=limit)
+        list_of_news_retrieved = self.newsDAO.getListOfNews(list_of_tickers=list_of_tickers, limit=limit, offset=offset)
         list_of_news_processed = []
-        for news in list_of_news_retrieved:
+        for news in list_of_news_retrieved['listOfNews']:
             news_object = {"newsLink": news[0], "newsTitle": news[1], "newsSource": news[2], "newsPublishTime": news[3], "tickers": np.array(news[4]).flatten().tolist()}
             if news[5]:
                 news_object["newsSentiment"] = news[5]
             list_of_news_processed.append(news_object)
-        return list_of_news_processed
+        result = {"numberOfNews": list_of_news_retrieved['numberOfNews'], "listOfNews": list_of_news_processed}
+        return result
     
     # @override
     def getListOfUniqueTickers(self)->list[str]:      

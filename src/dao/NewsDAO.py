@@ -10,9 +10,9 @@ class NewsDAO(ABC):
         pass
     
     @abstractmethod
-    def getListOfNews(self, list_of_tickers:list[str]|Literal['all']|None=None, limit:int|None=10)->list[tuple[Any]]:
+    def getListOfNews(self, list_of_tickers:list[str]|Literal['all']|None=None, limit:int=10, offset: int = 0)->dict[str, list[tuple[Any]]|int]:
         '''
-        Returns a list of filtered news from database
+        Returns a dictionary containing showing number of news and list of filtered news from database
         '''
         pass
 
