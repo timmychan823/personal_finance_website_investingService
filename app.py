@@ -64,24 +64,29 @@ def list_of_unique_companies():
         list_of_unique_companies = (newServiceImpl.getListOfUniqueTickers())
         return list_of_unique_companies
     
-@app.route('/listOfCompanies', methods = ['GET']) #TODO: should be POST method ideally
+@app.route('/listOfCompanies', methods = ['POST'])
 def list_of_companies():
-    if request.method == "GET":
-        if request.args.get('sectors')=='all':
-            list_of_sectors='all'
-        else:
-            list_of_sectors = request.args.getlist('sectors')
-        if request.args.get('subIndustries')=='all':
-            list_of_sub_industries='all'
-        else:
-            list_of_sub_industries = request.args.getlist('subIndustries')
+    if request.method == "POST":
         try:
-            limit = min(int(request.args.get('limit')), 50) 
+            data = request.get_json()
+            list_of_sub_industries = data.get('subIndustries', [])
+            search_query = data.get('searchQuery', '')
+            try:
+                limit = min(int(data.get('limit', 10)), 50)
+            except Exception as e:
+                limit = 10
+            try:
+                pageNumber = max(int(data.get('pageNumber', 1)) - 1, 0)
+            except Exception as e:
+                pageNumber = 0
+            offset = pageNumber * limit
+            
+            logger.info(f"list_of_sub_industries: {list_of_sub_industries}, search_query: {search_query}, limit: {limit}, offset: {offset}")
+            list_of_companies = newServiceImpl.getListOfCompaniesBySubIndustries(list_of_sub_industries=list_of_sub_industries, search_query=search_query, limit=limit, offset=offset)
+            return list_of_companies
         except Exception as e:
-            limit = 10
-        logger.info(f"list_of_sectors: {list_of_sectors}, list_of_sub_industries: {list_of_sub_industries}, limit: {limit}")
-        list_of_companies = (newServiceImpl.getListOfCompanies(list_of_sectors=list_of_sectors, list_of_sub_industries=list_of_sub_industries, limit=limit))
-        return list_of_companies #TODO: should also return number of companies
+            logger.error(f"Error processing POST request: {str(e)}")
+            return {'error': str(e)}, 400
     
 @app.route('/dataReleases', methods = ['GET'])
 async def list_of_releases():

@@ -29,6 +29,13 @@ class NewsDAO(ABC):
         Returns a list of unique companies from database
         '''
         pass
+
+    @abstractmethod
+    def getListOfCompaniesBySubIndustries(self, list_of_sub_industries: list[str], search_query:str='', limit:int=10, offset:int=0)->dict[str, list[tuple[str]]|int]:
+        '''
+        Returns a list of companies filtered by sub-industries and search query with pagination support
+        '''
+        pass
     ##TODO: add getAllSectorsAndSubIndustries
     @abstractmethod
     def getAllSectorsAndSubIndustries(self)->list[tuple[str|list[str]]]:

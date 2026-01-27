@@ -152,3 +152,58 @@ class NewsDAOImpl(NewsDAO):
             curs.execute(query)
             records = curs.fetchall()
             return records
+
+    # @override
+    def getListOfCompaniesBySubIndustries(self, list_of_sub_industries: list[str], search_query:str='', limit:int=10, offset:int=0)->dict[str, list[tuple[str]]|int]:
+        '''
+        This function is used to get list of companies filtered by sub-industries and search query with pagination support
+
+        Parameters
+        ----------
+        list_of_sub_industries: list[str]
+            list of sub-industries to filter companies
+        search_query: str, default ''
+            search query to filter companies by ticker (ticker contains search_query)
+        limit: int, default 10
+            maximum number of companies to return
+        offset: int, default 0
+            offset for pagination
+
+        Returns
+        -------
+        dict[str, list[tuple[str]]|int]
+            a dictionary containing list of companies and total count of companies matching the filters
+        '''
+        with self.conn.cursor() as curs: 
+            query_filter = """
+                        WHERE 1=1
+                    """
+            if list_of_sub_industries and len(list_of_sub_industries) > 0:
+                query_filter+=""" AND "subIndustry" = ANY(ARRAY"""
+                query_filter+=str(list_of_sub_industries)
+                query_filter+="::text[])"
+            
+            if search_query and len(search_query) > 0:
+                query_filter+=f""" OR ticker ILIKE '%{search_query}%'"""
+            
+            # Get total count
+            count_query = f"""
+                        SELECT COUNT(*)
+                        FROM public."Companies"
+                        {query_filter}
+                    """
+            curs.execute(count_query)
+            total_count = curs.fetchone()[0]
+            print(f"Total count of companies matching filters: {total_count}")
+            # Get paginated results
+            query = f"""
+                        SELECT ticker, "companyName", sector, "subIndustry"
+                        FROM public."Companies"
+                        {query_filter}
+                        LIMIT {limit}
+                        OFFSET {offset};
+                    """
+            curs.execute(query)
+            records = curs.fetchall()
+            print(f'Retrieved {len(records)} records with limit {limit} and offset {offset}')
+            return {'listOfCompanies': records, 'numberOfCompanies': total_count}

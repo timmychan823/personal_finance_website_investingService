@@ -52,13 +52,13 @@ class NewServiceImpl(NewService):
         return list_of_news_retrieved
 
     # @override
-    def getListOfCompanies(self, list_of_sectors :list[str], list_of_sub_industries: list[str], limit:int=10)->list[dict[str, str]]:
+    def getListOfCompanies(self, list_of_sectors: list[str]|Literal['all']|None=None, list_of_sub_industries: list[str]|Literal['all']|None=None, limit:int=10)->list[dict[str, str]]:
         '''
         This function is used to get list of companies and reformat data retrieved from database
 
         Returns
         -------
-        list[str]
+        list[dict[str, str]]
             a list of companies eg. [{'ticker': 'TSLA', 'companyName': 'Tesla, Inc.', 'sector': 'Consumer Discretionary', 'subIndustry': 'Automobile Manufacturers'}, {'ticker': "NVDA", 'companyName': "Nvidia", 'sector': "Information Technology", 'subIndustry': "Semiconductors"}] will be returned, which is a list of dict[str, str]
         '''    
         list_of_companies_retrieved = self.newsDAO.getListOfCompanies(list_of_sectors=list_of_sectors, list_of_sub_industries=list_of_sub_industries, limit=limit)
@@ -67,6 +67,34 @@ class NewServiceImpl(NewService):
             company_object = {"ticker": company[0], "companyName": company[1], "sector": company[2], "subIndustry": company[3]}
             list_of_companies_processed.append(company_object)
         return list_of_companies_processed
+
+    # @override
+    def getListOfCompaniesBySubIndustries(self, list_of_sub_industries: list[str], search_query:str='', limit:int=10, offset:int=0)->dict[str, list[dict[str, str]]|int]:
+        '''
+        This function is used to get list of companies filtered by sub-industries and search query with pagination and reformat data retrieved from database
+
+        Parameters
+        ----------
+        list_of_sub_industries: list[str]
+            list of sub-industries to filter companies
+        search_query: str, default ''
+            search query to filter companies by ticker (ticker contains search_query)
+        limit: int, default 10
+            maximum number of companies to return
+        offset: int, default 0
+            offset for pagination
+
+        Returns
+        -------
+        dict[str, list[dict[str, str]]|int]
+            a dictionary containing list_of_companies and numberOfCompanies with format {'list_of_companies': [{'ticker': 'MMM', 'companyName': '3M', 'subIndustry': 'Industrial Conglomerates'}], 'numberOfCompanies': 1}
+        '''    
+        data_retrieved = self.newsDAO.getListOfCompaniesBySubIndustries(list_of_sub_industries=list_of_sub_industries, search_query=search_query, limit=limit, offset=offset)
+        list_of_companies_processed = []
+        for company in data_retrieved['listOfCompanies']:
+            company_object = {"ticker": company[0], "companyName": company[1], "subIndustry": company[3]}
+            list_of_companies_processed.append(company_object)
+        return {'list_of_companies': list_of_companies_processed, 'numberOfCompanies': data_retrieved['numberOfCompanies']}
     ##TODO: add getAllSectorsAndSubIndustries
     def getAllSectorsAndSubIndustries(self)->list[dict[str, str|list[str]]]:
         '''

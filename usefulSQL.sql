@@ -10,6 +10,21 @@ CREATE DATABASE "NewsSummaryDB"
     IS_TEMPLATE = False;
 ---Create Database: NewsSummaryDB---
 
+---Create public."Companies" to store list of companies with their sector and sub-industry---
+CREATE TABLE IF NOT EXISTS public."Companies"
+(
+    ticker text COLLATE pg_catalog."default",
+    "companyName" text COLLATE pg_catalog."default",
+    sector text COLLATE pg_catalog."default",
+    "subIndustry" text COLLATE pg_catalog."default"
+)
+TABLESPACE pg_default;
+
+
+ALTER TABLE IF EXISTS public."Companies"
+    OWNER to "personalFinanceWebsiteAdmin";
+---Create public."Companies" to store list of companies with their sector and sub-industry---
+
 ---Create public."News" to store raw news scraped using Selenium
 CREATE TABLE IF NOT EXISTS public."News"
 (
