@@ -49,7 +49,7 @@ def fetch_news_from_db(conn: psycopg2.extensions.connection, logger: logging.Log
             query = """
                         SELECT link, "newsTitle", "newsSource", "newsPublishTime", "tickers", "newsSentiment"
                         FROM public."NewsSummary"
-                        WHERE "newsSentiment" IS NULL AND "newsPublishTime" >= NOW() - INTERVAL '7 days' AND CARDINALITY(tickers) = 1;
+                        WHERE "newsSentiment" IS NULL AND "newsPublishTime" >= NOW() - INTERVAL '14 days' AND CARDINALITY(tickers) = 1;
                     """
             curs.execute(query)
             records = curs.fetchall()

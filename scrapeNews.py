@@ -1,4 +1,4 @@
-from selenium import webdriver #TODO: use headless mode to run in background later
+from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
@@ -101,11 +101,8 @@ def scrapeNews(logger: logging.Logger):
             listOfNewsJsonObjects.clear()
         try:
             driver.get(f"https://finance.yahoo.com/quote/{ticker}/latest-news")
-            listOfNews = driver.find_elements(By.XPATH, '//*[@role="article"]') #TODO: change this to role="article"
+            listOfNews = driver.find_elements(By.XPATH, '//*[@role="article"]') 
             wait = WebDriverWait(driver, 10, 0.5).until(EC.presence_of_all_elements_located((By.XPATH, '//a[contains(@class, "subtle-link") and contains(@class, "fin-size-small") and contains(@class, "titles") and contains(@class, "noUnderline")]')))
-            ##TODO: 
-            # wait before element is ready
-            # email = WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "element_css"))).get_attribute("value")
             for news in listOfNews:
                 news_link = news.find_element(By.XPATH, './/a[contains(@class, "subtle-link") and contains(@class, "fin-size-small") and contains(@class, "titles") and contains(@class, "noUnderline")]').get_attribute("href")
                 newsTitle = news.find_element(By.CSS_SELECTOR, "h3").text

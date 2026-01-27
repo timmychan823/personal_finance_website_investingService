@@ -24,8 +24,15 @@ class NewsDAO(ABC):
         pass
 
     @abstractmethod
-    def getListOfCompanies(self, list_of_sectors:list[str]|Literal['all']|None=None, list_of_sub_industries: list[str]|Literal['all']|None=None, limit:int|None=10)->list[tuple[str]]:
+    def getListOfCompanies(self, list_of_sectors:list[str]|Literal['all']|None=None, list_of_sub_industries: list[str]|Literal['all']|None=None, limit:int=10)->list[tuple[str]]:
         '''
         Returns a list of unique companies from database
+        '''
+        pass
+    ##TODO: add getAllSectorsAndSubIndustries
+    @abstractmethod
+    def getAllSectorsAndSubIndustries(self)->list[tuple[str|list[str]]]:
+        '''
+        Returns a list of Sectors And SubIndustries from database
         '''
         pass

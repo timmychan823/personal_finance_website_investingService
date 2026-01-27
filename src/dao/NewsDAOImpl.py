@@ -1,7 +1,6 @@
 import psycopg2
 from .NewsDAO import NewsDAO
 from typing import Literal, Any
-from logging import getLogger
 # , override
 
 class NewsDAOImpl(NewsDAO):
@@ -29,7 +28,6 @@ class NewsDAOImpl(NewsDAO):
             dictionary containing number of news and a list of tuple will be returned, which is a list of news objects from the database
         '''
         try:
-            logger = getLogger()
             with self.conn.cursor() as curs: 
                 query_filtering_part = """FROM public."NewsSummary"
                 WHERE
@@ -46,24 +44,18 @@ class NewsDAOImpl(NewsDAO):
 
                 query_sorting_limit_offset_part =f"""ORDER BY "newsPublishTime" DESC
                 LIMIT {limit}
-                OFFSET {offset}""" #TODO: add offset later
+                OFFSET {offset}""" 
                 
                 query = f"""SELECT link, "newsTitle", "newsSource", "newsPublishTime", "tickers", "newsSentiment"
                 {query_filtering_part}
                 {query_sorting_limit_offset_part};"""
 
-                logger.info("Executing query:", query)  # //TODO: some problem here, 0 record fetched, Debugging line to print the query being executed
-
                 curs.execute(query)
                 records = curs.fetchall()
-                
-                logger.info(f"Records fetched: {records}")  # Debugging line to print fetched records
-                
+                                
                 query = f"""SELECT COUNT(*)
                 {query_filtering_part};
                 """
-
-                logger.info("Executing query:", query)  # Debugging line to print the query being executed
 
                 curs.execute(query)
                 number_of_news_from_db = curs.fetchone()
@@ -101,7 +93,7 @@ class NewsDAOImpl(NewsDAO):
         
             
     # @override
-    def getListOfCompanies(self, list_of_sectors:list[str]|Literal['all']|None=None, list_of_sub_industries: list[str]|Literal['all']|None=None, limit:int|None=10)->list[tuple[str]]:
+    def getListOfCompanies(self, list_of_sectors:list[str]|Literal['all']|None=None, list_of_sub_industries: list[str]|Literal['all']|None=None, limit:int=10)->list[tuple[str]]:
         '''
         This function is used to get list of companies from database
 
@@ -135,6 +127,27 @@ class NewsDAOImpl(NewsDAO):
                 query+=f"LIMIT {limit}"
             else:
                 query+=f"LIMIT {limit}"
+            query+=";"
+            curs.execute(query)
+            records = curs.fetchall()
+            return records
+        
+    ##TODO: add getAllSectorsAndSubIndustries
+    def getAllSectorsAndSubIndustries(self)->list[tuple[str|list[str]]]:
+        '''
+        This function is used to get list of Sectors And SubIndustries from database
+
+        Returns
+        -------
+        list[tuple[str]]
+            a list of Sectors And SubIndustries eg. [("Consumer Discretionary", "{""Apparel, Accessories & Luxury Goods"",""Apparel Retail"",""Automobile Manufacturers"",""Automotive Parts & Equipment"",""Automotive Retail"",""Broadline Retail"",""Casinos & Gaming"",""Computer & Electronics Retail"",""Consumer Electronics"",Distributors,Footwear,Homebuilding,""Homefurnishing Retail"",""Home Improvement Retail"",""Hotels, Resorts & Cruise Lines"",""Leisure Products"",""Other Specialty Retail"",Restaurants,""Specialized Consumer Services""}")] will be returned from the database
+        '''
+        with self.conn.cursor() as curs: 
+            query = """
+                        SELECT "sector", ARRAY_AGG(DISTINCT "subIndustry" ORDER BY "subIndustry")
+                        FROM public."Companies"
+                        GROUP BY "sector";
+                    """
             query+=";"
             curs.execute(query)
             records = curs.fetchall()

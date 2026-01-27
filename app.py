@@ -45,7 +45,7 @@ def list_of_news():
         else:
             tickers = request.args.getlist('tickers')
         try:
-            limit = min(int(request.args.get('limit')), 50) #TODO: should also get page number of desired page
+            limit = min(int(request.args.get('limit')), 50) 
         except Exception as e:
             limit = 10
         try:
@@ -56,7 +56,7 @@ def list_of_news():
         
         logger.info(f"tickers: {tickers}, limit: {limit}, offset: {offset}")
         list_of_news = (newServiceImpl.getListOfNews(tickers, limit, offset))
-        return list_of_news #TODO: should also count the total number of news and return page number of desired page 
+        return list_of_news 
 
 @app.route('/listOfUniqueCompanies', methods = ['GET'])
 def list_of_unique_companies():
@@ -64,7 +64,7 @@ def list_of_unique_companies():
         list_of_unique_companies = (newServiceImpl.getListOfUniqueTickers())
         return list_of_unique_companies
     
-@app.route('/listOfCompanies', methods = ['GET'])
+@app.route('/listOfCompanies', methods = ['GET']) #TODO: should be POST method ideally
 def list_of_companies():
     if request.method == "GET":
         if request.args.get('sectors')=='all':
@@ -76,18 +76,25 @@ def list_of_companies():
         else:
             list_of_sub_industries = request.args.getlist('subIndustries')
         try:
-            limit = min(int(request.args.get('limit')), 50) #TODO: should also get page number of desired page
+            limit = min(int(request.args.get('limit')), 50) 
         except Exception as e:
             limit = 10
         logger.info(f"list_of_sectors: {list_of_sectors}, list_of_sub_industries: {list_of_sub_industries}, limit: {limit}")
         list_of_companies = (newServiceImpl.getListOfCompanies(list_of_sectors=list_of_sectors, list_of_sub_industries=list_of_sub_industries, limit=limit))
-        return list_of_companies #TODO: should also count the total number of news and return page number of desired page 
+        return list_of_companies #TODO: should also return number of companies
     
 @app.route('/dataReleases', methods = ['GET'])
 async def list_of_releases():
     if request.method == 'GET':
         out = await dataReleaseServiceImpl.getDataRelease()
         return out
+    
+##TODO: add getAllSubIndustriesAndSectors
+@app.route("/listOfSectorsAndSubIndustries",methods=['GET'])
+def list_of_sectors_and_sub_industries():
+    if request.method == "GET":
+        list_of_sectors_and_sub_industries = {'subIndustriesBySector':newServiceImpl.getAllSectorsAndSubIndustries()}
+        return list_of_sectors_and_sub_industries
 
 @app.route("/sentimentAnalysis",methods=['POST'])
 def score():

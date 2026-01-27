@@ -25,8 +25,15 @@ class NewService(ABC):
         pass 
 
     @abstractmethod
-    def getListOfCompanies(self, list_of_sectors :list[str], list_of_sub_industries: list[str], limit:int|None=10)->list[dict[str, str]]:
+    def getListOfCompanies(self, list_of_sectors :list[str], list_of_sub_industries: list[str], limit:int=10)->list[dict[str, str]]:
         '''
         Returns a list of companies according to filter provided
+        '''
+        pass
+    ##TODO: add getAllSectorsAndSubIndustries
+    @abstractmethod
+    def getAllSectorsAndSubIndustries(self)->list[dict[str, str|list[str]]]:
+        '''
+        Returns a list of Sectors And SubIndustries
         '''
         pass

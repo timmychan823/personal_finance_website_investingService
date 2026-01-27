@@ -52,7 +52,7 @@ class NewServiceImpl(NewService):
         return list_of_news_retrieved
 
     # @override
-    def getListOfCompanies(self, list_of_sectors :list[str], list_of_sub_industries: list[str], limit:int|None=10)->list[dict[str, str]]:
+    def getListOfCompanies(self, list_of_sectors :list[str], list_of_sub_industries: list[str], limit:int=10)->list[dict[str, str]]:
         '''
         This function is used to get list of companies and reformat data retrieved from database
 
@@ -67,3 +67,16 @@ class NewServiceImpl(NewService):
             company_object = {"ticker": company[0], "companyName": company[1], "sector": company[2], "subIndustry": company[3]}
             list_of_companies_processed.append(company_object)
         return list_of_companies_processed
+    ##TODO: add getAllSectorsAndSubIndustries
+    def getAllSectorsAndSubIndustries(self)->list[dict[str, str|list[str]]]:
+        '''
+        Returns a list of Sectors And SubIndustries
+        '''
+        list_of_sectors_and_sub_industries_retrieved = self.newsDAO.getAllSectorsAndSubIndustries()
+        list_of_sectors_and_sub_industries_processed = []
+        for record in list_of_sectors_and_sub_industries_retrieved:
+            sector = record[0]
+            sub_industries = record[1]  # Assuming this is already a list
+            sector_object = {"sector": sector, "subIndustries": sub_industries}
+            list_of_sectors_and_sub_industries_processed.append(sector_object)
+        return list_of_sectors_and_sub_industries_processed

@@ -78,3 +78,35 @@ SELECT *
 FROM public."NewsSummary"
 WHERE CARDINALITY(tickers) = 1;
 ---Get back records with only one ticker in tickers array---
+
+---Create Database: InvestmentDB---
+CREATE DATABASE "InvestmentDB"
+    WITH
+    OWNER = "personalFinanceWebsiteAdmin"
+    ENCODING = 'UTF8'
+    LC_COLLATE = 'en_US.utf8'
+    LC_CTYPE = 'en_US.utf8'
+    TABLESPACE = pg_default
+    CONNECTION LIMIT = -1
+    IS_TEMPLATE = False;
+---Create Database: InvestmentDB---
+
+---Create public."PersonalInvestmentData" to store personal data for each user
+CREATE TABLE IF NOT EXISTS public."PersonalInvestmentData"
+(
+    "sid" text COLLATE pg_catalog."default",
+    "riskPreference" double precision,
+    "currentStockPortfolio" text[] COLLATE pg_catalog."default",
+    CONSTRAINT "PersonalInvestmentData_pkey" PRIMARY KEY (sid)
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public."PersonalInvestmentData"
+    OWNER to "personalFinanceWebsiteAdmin";
+---Create public."PersonalInvestmentData" to store personal data for each user
+
+---New Processing if table public."PersonalInvestmentData" exists---
+INSERT into public."PersonalInvestmentData"
+VALUES ('40727875-2792-435c-8908-a4db61dc58d7',0.6,'{"MSFT", "TSLA", "APPL", "META"}')
+---New Processing if table public."PersonalInvestmentData" exists---
