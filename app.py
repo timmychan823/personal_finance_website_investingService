@@ -3,6 +3,8 @@ from src.constant.Db_constants import *
 from src.dao.NewsDAOImpl import NewsDAOImpl
 from src.service.NewsServiceImpl import NewServiceImpl
 from src.service.DataReleaseImpl import DataReleaseServiceImpl
+from src.dao.PredictionDAOImpl import PredictionDAOImpl
+from src.service.PredictionServiceImpl import PredictionServiceImpl
 from flask import Flask, request, render_template
 from flask_cors import CORS
 import requests
@@ -36,6 +38,8 @@ con = psycopg2.connect(**pg_connection_dict)
 newsDAO = NewsDAOImpl(con)
 newServiceImpl = NewServiceImpl(newsDAO)
 dataReleaseServiceImpl = DataReleaseServiceImpl()
+predictionDAO = PredictionDAOImpl(con)
+predictionService = PredictionServiceImpl(predictionDAO)
 
 @app.route('/listOfNews', methods = ['GET'])
 def list_of_news():
@@ -105,6 +109,22 @@ def list_of_sectors_and_sub_industries():
 def score():
     text=request.get_json()['text']
     return(predict(text, model).to_json(orient='records'))
+
+
+@app.route('/predictedDailyReturn', methods=['GET'])
+def predicted_daily_return():
+    if request.method == 'GET':
+        ticker = request.args.get('ticker')
+        if not ticker:
+            return {'error': 'ticker query parameter is required'}, 400
+        try:
+            prediction = predictionService.getLatestPrediction(ticker)
+            if prediction is None:
+                return {'ticker': ticker, 'prediction': None}, 404
+            return {'ticker': ticker, 'prediction': int(prediction)}
+        except Exception as e:
+            logger.error(f"Error fetching prediction for {ticker}: {str(e)}")
+            return {'error': str(e)}, 500
 
 if __name__ == '__main__':
     app.run(debug = True, host = '0.0.0.0', port=5000)
