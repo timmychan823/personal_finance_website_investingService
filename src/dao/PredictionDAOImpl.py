@@ -50,4 +50,9 @@ class PredictionDAOImpl(PredictionDAO):
             if not row:
                 return None
             prediction = int(row[0])
-            return prediction
+            prediction_date = row[1]
+            # created_at is row[2], can be returned if needed
+            return {
+                'prediction': prediction,
+                'prediction_date': prediction_date
+            }

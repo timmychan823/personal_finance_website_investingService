@@ -184,7 +184,7 @@ class NewsDAOImpl(NewsDAO):
                 query_filter+="::text[])"
             
             if search_query and len(search_query) > 0:
-                query_filter+=f""" OR ticker ILIKE '%{search_query}%'"""
+                query_filter+=f""" AND ticker ILIKE '%{search_query}%'"""
             
             # Get total count
             count_query = f"""

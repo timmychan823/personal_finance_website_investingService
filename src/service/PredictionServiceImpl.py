@@ -7,7 +7,7 @@ class PredictionServiceImpl(PredictionService):
         self.predictionDAO = prediction_dao
 
     def getLatestPrediction(self, ticker: str):
-        '''Return latest prediction (0 or 1) or None.'''
+        '''Return latest prediction and prediction_date, or None.'''
         return self.predictionDAO.getLatestPrediction(ticker)
 
     def savePrediction(self, ticker: str, prediction: int, prediction_date: date) -> None:

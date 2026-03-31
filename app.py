@@ -17,6 +17,7 @@ from finbert.finbert import predict
 from pytorch_pretrained_bert.modeling import BertForSequenceClassification
 import nltk
 import os
+from flask import jsonify
 
 logger = logging.getLogger()
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s') #change this to DEBUG mode for debugging
@@ -118,12 +119,86 @@ def predicted_daily_return():
         if not ticker:
             return {'error': 'ticker query parameter is required'}, 400
         try:
-            prediction = predictionService.getLatestPrediction(ticker)
-            if prediction is None:
-                return {'ticker': ticker, 'prediction': None}, 404
-            return {'ticker': ticker, 'prediction': int(prediction)}
+            prediction_data = predictionService.getLatestPrediction(ticker)
+            if prediction_data is None:
+                return {'ticker': ticker, 'prediction': None, 'prediction_date': None, 'message': 'No prediction found for this ticker'}, 404
+
+            prediction = prediction_data.get('prediction')
+            prediction_date = prediction_data.get('prediction_date')
+            prediction_text = 'UP' if prediction == 1 else 'DOWN'
+            confidence_note = ' (Stock price expected to go up)' if prediction == 1 else ' (Stock price expected to go down)'
+
+            return {
+                'ticker': ticker,
+                'prediction': int(prediction),
+                'prediction_date': prediction_date.isoformat() if prediction_date else None,
+                'prediction_text': prediction_text,
+                'message': f'Stock {ticker} is predicted to go {prediction_text}{confidence_note}'
+            }
         except Exception as e:
             logger.error(f"Error fetching prediction for {ticker}: {str(e)}")
+            return {'error': str(e)}, 500
+
+@app.route('/predictedDailyReturn/batch', methods=['POST'])
+def predicted_daily_return_batch():
+    if request.method == 'POST':
+        try:
+            data = request.get_json()
+            tickers = data.get('tickers', [])
+            
+            if not tickers:
+                return {'error': 'tickers list is required in request body'}, 400
+            
+            if not isinstance(tickers, list):
+                return {'error': 'tickers must be a list'}, 400
+            
+            if len(tickers) > 50:  # Limit batch size
+                return {'error': 'Maximum 50 tickers allowed per request'}, 400
+            
+            results = []
+            for ticker in tickers:
+                try:
+                    prediction_data = predictionService.getLatestPrediction(ticker)
+                    if prediction_data is not None:
+                        prediction = prediction_data.get('prediction')
+                        prediction_date = prediction_data.get('prediction_date')
+                        prediction_text = 'UP' if prediction == 1 else 'DOWN'
+                        results.append({
+                            'ticker': ticker,
+                            'prediction': int(prediction),
+                            'prediction_date': prediction_date.isoformat() if prediction_date else None,
+                            'prediction_text': prediction_text,
+                            'status': 'success'
+                        })
+                    else:
+                        results.append({
+                            'ticker': ticker,
+                            'prediction': None,
+                            'prediction_date': None,
+                            'prediction_text': None,
+                            'status': 'not_found',
+                            'message': 'No prediction found for this ticker'
+                        })
+                except Exception as e:
+                    results.append({
+                        'ticker': ticker,
+                        'prediction': None,
+                        'prediction_date': None,
+                        'prediction_text': None,
+                        'status': 'error',
+                        'message': str(e)
+                    })
+            
+            return {
+                'results': results,
+                'total_requested': len(tickers),
+                'total_found': len([r for r in results if r['status'] == 'success']),
+                'total_not_found': len([r for r in results if r['status'] == 'not_found']),
+                'total_errors': len([r for r in results if r['status'] == 'error'])
+            }
+            
+        except Exception as e:
+            logger.error(f"Error processing batch prediction request: {str(e)}")
             return {'error': str(e)}, 500
 
 if __name__ == '__main__':
